@@ -1,35 +1,57 @@
-using ElectricitySimulator;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
-public class Wire : ElecBlock
+namespace TuringSimulator
 {
-    private bool _powerOutput = false;
-
-    #region Public API
-
-    public bool PowerInput
+    public class Wire : ElecBlock
     {
-        get => _powerOutput;
-        set => _powerOutput = value;
-    }
+        private bool _powerOutput = false;
 
-    #endregion
+        #region Public API
 
-    public Wire(Cell positionCell)
-    {
-        _powerOutput = false;
-        _positionCell = positionCell;
-    }
+        public bool PowerOutput
+        {
+            get => _powerOutput;
+            set => _powerOutput = value;
+        }
 
-    public override void UpdateBehaviour()
-    {
-        Propagate();
-    }
+        #endregion
 
-    protected override void PropagateBehaviour(ElecBlock origin, int x, int y)
-    {
-        PropagateElec(origin, _powerOutput, x, y);
+        public Wire(Cell positionCell)
+        {
+            _powerOutput = false;
+            _positionCell = positionCell;
+        }
+
+        public override void UpdateBehaviour()
+        {
+            Propagate(PropagationOrder.PropagatePower, true);
+
+            powerSourceFounded = new List<ElecBlock>();
+            Propagate(PropagationOrder.ScanForSource, true);
+        }
+
+        protected override void PropagateBehaviour(ElecBlock origin, int x, int y, PropagationOrder order)
+        {
+            if (order == PropagationOrder.PropagatePower)
+            {
+                PropagateElec(origin, _powerOutput, x, y);
+                return;
+            }
+
+            if (order == PropagationOrder.ScanForSource)
+            {
+                PropagateSearchForSource(origin, x, y);
+                return;
+            }
+        }
+
+        public void CallLinkedPowerSourceUpdates()
+        {
+            if (powerSourceFounded.Count == 0)
+                return;
+
+            for (int i = 0; i < powerSourceFounded.Count; i++)
+                powerSourceFounded[i].UpdateBehaviour();
+        }
     }
 }

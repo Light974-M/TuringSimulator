@@ -1,6 +1,4 @@
-using UnityEngine;
-
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// Level GridMap, represented by a 2D Array filled with cells classes.

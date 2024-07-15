@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// control camera movement for 2D game mode

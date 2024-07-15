@@ -1,7 +1,7 @@
 using UnityEngine;
-using static UnityEngine.RuleTile.TilingRuleOutput;
+using UPDB.CoreHelper.UsableMethods.Structures;
 
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// renderer for every game cells, making textures, and collision detections
@@ -14,6 +14,10 @@ namespace ElectricitySimulator
         private SpriteRenderer _cellTile;
 
         private Cell _linkedCell = null;
+
+        private Trigger _leftClickEnterTrigger;
+        private Trigger _leftClickStayTrigger;
+        private Trigger _rightClickStayTrigger;
 
 
         #region Public API
@@ -33,15 +37,7 @@ namespace ElectricitySimulator
 
         private void FixedUpdate()
         {
-            if (!ReferenceEquals(_linkedCell.BlockContained, null) && _linkedCell.BlockContained.GetType() == typeof(Switch))
-            {
-                GraphicUpdate();
-            }
-
-            if (!ReferenceEquals(_linkedCell.BlockContained, null) && _linkedCell.BlockContained.GetType() == typeof(Wire))
-            {
-                GraphicUpdate();
-            }
+            GraphicUpdate();
         }
 
         private void OnMouseOver()
@@ -49,24 +45,18 @@ namespace ElectricitySimulator
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 LeftMouseEntryAction();
-
-                GraphicUpdate();
                 return;
             }
 
             if (Input.GetKey(KeyCode.Mouse0))
             {
                 LeftMouseStayAction();
-
-                GraphicUpdate();
                 return;
             }
 
             if (Input.GetKey(KeyCode.Mouse1))
             {
                 RightMouseStayAction();
-
-                GraphicUpdate();
                 return;
             }
         }
@@ -83,7 +73,7 @@ namespace ElectricitySimulator
             {
                 Wire wire = _linkedCell.BlockContained as Wire;
 
-                if (wire.PowerInput)
+                if (wire.PowerOutput)
                     _cellTile.color = new Color(1, 0.2f, 0.2f, 1);
                 else
                     _cellTile.color = new Color(0.5f, 0, 0, 1);
@@ -118,12 +108,21 @@ namespace ElectricitySimulator
 
         private void LeftMouseEntryAction()
         {
-            if (!ReferenceEquals(_linkedCell.BlockContained, null) && _linkedCell.BlockContained.GetType() == typeof(Switch))
+            if (ReferenceEquals(_linkedCell.BlockContained, null))
             {
-                Switch switchObj = _linkedCell.BlockContained as Switch;
+                return;
+            }
 
-                switchObj.EnabledState = !switchObj.EnabledState;
-                switchObj.UpdateBehaviour();
+            if (_linkedCell.BlockContained.GetType() == typeof(Switch))
+            {
+                OnSwitchClicked();
+                return;
+            }
+
+            if (_linkedCell.BlockContained.GetType() == typeof(Wire))
+            {
+                OnWireClicked();
+                return;
             }
         }
 
@@ -132,9 +131,7 @@ namespace ElectricitySimulator
             if (LevelRenderer.Instance.SelectedBrush == BlockTagList.Wire)
             {
                 if (ReferenceEquals(_linkedCell.BlockContained, null))
-                {
                     OnWireCreate();
-                }
 
                 return;
             }
@@ -177,57 +174,28 @@ namespace ElectricitySimulator
             return;
         }
 
-        private void PropagateArround()
-        {
-            for (int y = -1; y < 2; y++)
-            {
-                for (int x = -1; x < 2; x++)
-                {
-                    if (!(x != 0 ^ y != 0)) continue;
-
-                    int xLinked = _linkedCell.Position.x + x;
-                    int yLinked = _linkedCell.Position.y + y;
-
-                    if (xLinked < 0 || yLinked < 0 || xLinked >= _linkedCell.LinkedLevel.Width || yLinked >= _linkedCell.LinkedLevel.Height) continue;
-
-                    PropagateToNeigbor(xLinked, yLinked);
-                }
-            }
-        }
-
-        private void PropagateToNeigbor(int x, int y)
-        {
-            Cell neighbor = _linkedCell.LinkedLevel.CellsArray[x, y];
-
-            if (ReferenceEquals(neighbor.BlockContained, null))
-                return;
-
-            if (neighbor.BlockContained.GetType() == typeof(Wire))
-            {
-                Wire wire = neighbor.BlockContained as Wire;
-                if (wire.PowerInput != false)
-                {
-                    wire.PowerInput = false;
-
-                    wire.UpdateBehaviour();
-                }
-            }
-        }
-
         private void OnWireCreate()
         {
             _linkedCell.BlockContained = new Wire(_linkedCell);
+
+            if (LevelRenderer.Instance.DebugMode)
+                return;
+
             Wire wire = _linkedCell.BlockContained as Wire;
             wire.UpdateBehaviour();
+            wire.CallLinkedPowerSourceUpdates();
         }
 
         private void OnWireDestroy()
         {
             Wire wire = _linkedCell.BlockContained as Wire;
-            wire.PowerInput = false;
+            wire.PowerOutput = false;
+
+            wire.UpdateBehaviour();
+
             _linkedCell.BlockContained = null;
 
-            PropagateArround();
+            wire.CallLinkedPowerSourceUpdates();
         }
 
         private void OnSwitchCreate()
@@ -249,6 +217,27 @@ namespace ElectricitySimulator
             powerSource.UpdateBehaviour();
 
             _linkedCell.BlockContained = null;
+        }
+
+        private void OnSwitchClicked()
+        {
+            Switch switchObj = _linkedCell.BlockContained as Switch;
+
+            switchObj.EnabledState = !switchObj.EnabledState;
+
+            if (LevelRenderer.Instance.DebugMode)
+                return;
+
+            switchObj.UpdateBehaviour();
+        }
+
+        private void OnWireClicked()
+        {
+            if (LevelRenderer.Instance.DebugMode)
+            {
+                Wire wire = _linkedCell.BlockContained as Wire;
+                wire.PowerOutput = !wire.PowerOutput;
+            }
         }
     }
 }

@@ -1,36 +1,60 @@
-using ElectricitySimulator;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
+using System.Diagnostics;
 
-public class PowerSource : ElecBlock
+namespace TuringSimulator
 {
-    protected bool _enabledState = true;
-
-    #region Public API
-
-    public bool EnabledState
+    public class PowerSource : ElecBlock
     {
-        get => _enabledState;
-        set => _enabledState = value;
-    }
+        protected bool _enabledState = true;
 
-    #endregion
+        #region Public API
+
+        public bool EnabledState
+        {
+            get => _enabledState;
+            set => _enabledState = value;
+        }
+
+        #endregion
 
 
-    public PowerSource(Cell positionCell)
-    {
-        _enabledState = true;
-        _positionCell = positionCell;
-    }
+        public PowerSource(Cell positionCell)
+        {
+            _enabledState = true;
+            _positionCell = positionCell;
+        }
 
-    public override void UpdateBehaviour()
-    {
-        Propagate();
-    }
+        public override void UpdateBehaviour()
+        {
+            Propagate(PropagationOrder.PropagatePower, true);
 
-    protected override void PropagateBehaviour(ElecBlock origin, int x, int y)
-    {
-        PropagateElec(origin, _enabledState, x, y);
+            if (!_enabledState)
+            {
+                powerSourceFounded = new List<ElecBlock>();
+                Propagate(PropagationOrder.ScanForSource, true);
+
+                if (powerSourceFounded.Count == 0)
+                    return;
+
+                for (int i = 0; i < powerSourceFounded.Count; i++)
+                    powerSourceFounded[i].UpdateBehaviour();
+            }
+
+        }
+
+        protected override void PropagateBehaviour(ElecBlock origin, int x, int y, PropagationOrder order)
+        {
+            if (order == PropagationOrder.ScanForSource)
+            {
+                PropagateSearchForSource(origin, x, y);
+                return;
+            }
+
+            if (order == PropagationOrder.PropagatePower)
+            {
+                PropagateElec(origin, _enabledState, x, y);
+                return;
+            }
+        }
     }
 }

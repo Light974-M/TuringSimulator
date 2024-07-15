@@ -1,4 +1,4 @@
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// coordinate system for Cells, objects, and every native classes that need to be represented into a position in 2D

@@ -1,4 +1,4 @@
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// represent cells epxloitable into a 2D grid

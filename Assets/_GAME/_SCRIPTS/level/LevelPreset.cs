@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// parameter of level that will be used between scene loads
@@ -22,6 +22,9 @@ namespace ElectricitySimulator
 
         [SerializeField]
         private bool _load = false;
+
+        [SerializeField]
+        private bool _erase = false;
 
         private CellSaveRender[] _cellListSave = null;
 
@@ -129,6 +132,14 @@ namespace ElectricitySimulator
             {
                 LoadCellList();
                 _load = false;
+            }
+
+            if(_erase)
+            {
+                _level = new Level(_width, _height);
+
+                SaveCellList();
+                _erase = false;
             }
         }
 

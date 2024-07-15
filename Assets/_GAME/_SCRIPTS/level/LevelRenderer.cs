@@ -1,7 +1,8 @@
+using System.Collections;
 using UnityEngine;
 using UPDB.CoreHelper.UsableMethods;
 
-namespace ElectricitySimulator
+namespace TuringSimulator
 {
     ///<summary>
     /// renderer of levelMap for unityEngine
@@ -26,13 +27,17 @@ namespace ElectricitySimulator
         [SerializeField, Tooltip("GameObject that contain every cells of the grid")]
         private GameObject _cellsParentObject;
 
-        [SerializeField]
-        private BlockTagList _selectedBrush;
 
 
         [Header("TOOLS PARAMETERS")]
         [SerializeField, Tooltip("")]
         private Camera _gameCamera;
+
+        [SerializeField]
+        private BlockTagList _selectedBrush;
+
+        [SerializeField, Tooltip("allow certain actions, such as changing values of eleckblock without updating anything")]
+        private bool _debugMode = false;
 
         private float _timer = 0;
 
@@ -49,6 +54,8 @@ namespace ElectricitySimulator
         }
 
         public LevelPreset LvlPreset => _levelPreset;
+
+        public bool DebugMode => _debugMode;
 
         #endregion
 
@@ -83,8 +90,6 @@ namespace ElectricitySimulator
 
             if (!_levelPreset.Level.IsPaused && !_levelPreset.Level.IsGameOver)
                 TimerUpdate();
-
-
 
             PauseInputManager();
 
